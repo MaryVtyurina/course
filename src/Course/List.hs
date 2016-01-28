@@ -30,7 +30,7 @@ import qualified Numeric as N
 
 -- BEGIN Helper functions and data types
 
--- The custom list type//тип настраиваемого списка
+-- The custom list type
 data List t =
   Nil
   | t :. List t
@@ -72,7 +72,7 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 --
 -- prop> x `headOr` Nil == x
 headOr ::  a  -> List a  -> a
-headOr _ Nil = error "No empty lists!"
+headOr x Nil = x
 headOr _ (x :. _) = x
 
 
@@ -86,8 +86,10 @@ headOr _ (x :. _) = x
 product ::
   List Int
   -> Int
-product =
-  error "todo: Course.List#product"
+product Nil = 0
+product (x :. Nil) = x
+product (x :. xs) = x * product xs
+
 
 -- | Sum the elements of the list.
 --
@@ -101,8 +103,8 @@ product =
 sum ::
   List Int
   -> Int
-sum =
-  error "todo: Course.List#sum"
+sum Nil = 0
+sum (x :. xs) = x + sum xs
 
 -- | Return the length of the list.
 --
@@ -113,8 +115,9 @@ sum =
 length ::
   List a
   -> Int
-length =
-  error "todo: Course.List#length"
+length Nil = 0
+length (x :. xs) = 1 + length xs
+
 
 -- | Map the given function on each element of the list.
 --
@@ -128,8 +131,10 @@ map ::
   (a -> b)
   -> List a
   -> List b
-map =
-  error "todo: Course.List#map"
+map _ Nil = Nil
+map f (x :. xs) = f x :. map f xs
+
+
 
 -- | Return elements satisfying the given predicate.
 --
@@ -145,8 +150,11 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter =
-  error "todo: Course.List#filter"
+filter _ Nil = Nil
+filter p (x :. xs)
+  | p x       = x :. filter p xs
+  | otherwise =  filter p xs
+
 
 -- | Append two lists to a new list.
 --
@@ -164,8 +172,9 @@ filter =
   List a
   -> List a
   -> List a
-(++) =
-  error "todo: Course.List#(++)"
+(++) Nil Nil = Nil
+(++) xs ys = foldRight (:.) ys xs
+
 
 infixr 5 ++
 
@@ -182,8 +191,8 @@ infixr 5 ++
 flatten ::
   List (List a)
   -> List a
-flatten =
-  error "todo: Course.List#flatten"
+flatten xs = xs
+flatten (List (y :. ys)) = flatten y (++) flatten ys // как показать, что это список списков?
 
 -- | Map a function then flatten to a list.
 --
