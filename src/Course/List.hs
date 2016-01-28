@@ -86,8 +86,7 @@ headOr _ (x :. _) = x
 product ::
   List Int
   -> Int
-product Nil = 0
-product (x :. Nil) = x
+product Nil = 1
 product (x :. xs) = x * product xs
 
 
@@ -103,8 +102,7 @@ product (x :. xs) = x * product xs
 sum ::
   List Int
   -> Int
-sum Nil = 0
-sum (x :. xs) = x + sum xs
+sum = foldRight (+) 0
 
 -- | Return the length of the list.
 --
@@ -173,7 +171,11 @@ filter p (x :. xs)
   -> List a
   -> List a
 (++) Nil Nil = Nil
-(++) xs ys = foldRight (:.) ys xs
+(++) Nil xs = xs
+(++) xs Nil = xs
+(++) (x :. xs) ys = x :. (++) xs ys
+--(++) xs ys = foldRight (:.) ys xs
+
 
 
 infixr 5 ++
@@ -191,8 +193,8 @@ infixr 5 ++
 flatten ::
   List (List a)
   -> List a
-flatten xs = xs
-flatten (List (y :. ys)) = flatten y (++) flatten ys // как показать, что это список списков?
+flatten Nil = Nil
+flatten (x :. ys) = x ++ flatten ys
 
 -- | Map a function then flatten to a list.
 --
