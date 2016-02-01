@@ -102,7 +102,7 @@ product (x :. xs) = x * product xs
 sum ::
   List Int
   -> Int
-sum = foldRight (+) 0
+sum = foldLeft (+) 0
 
 -- | Return the length of the list.
 --
@@ -170,9 +170,7 @@ filter p (x :. xs)
   List a
   -> List a
   -> List a
-(++) Nil Nil = Nil
 (++) Nil xs = xs
-(++) xs Nil = xs
 (++) (x :. xs) ys = x :. (++) xs ys
 --(++) xs ys = foldRight (:.) ys xs
 
@@ -210,18 +208,18 @@ flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap =
-  error "todo: Course.List#flatMap"
+flatMap _ Nil = Nil
+flatMap f (x :. xs) = f x ++ flatMap f xs
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
 --
 -- prop> let types = x :: List (List Int) in flatten x == flattenAgain x
+
 flattenAgain ::
   List (List a)
-  -> List a
-flattenAgain =
-  error "todo: Course.List#flattenAgain"
+     -> List a
+flattenAgain xs = flatMap (\x -> x) xs
 
 -- | Convert a list of optional values to an optional list of values.
 --
@@ -245,11 +243,18 @@ flattenAgain =
 --
 -- >>> seqOptional (Empty :. map Full infinity)
 -- Empty
-seqOptional ::
-  List (Optional a)
-  -> Optional (List a)
-seqOptional =
-  error "todo: Course.List#seqOptional"
+
+-- seqOptional ::
+--   List (Optional a)
+--   -> Optional (List a)
+-- seqOptional Nil = Full Nil
+-- seqOptional (x :. xs) =
+--     case x of
+--       Empty -> Empty
+--       Full a -> a :. seqOptional xs
+
+  -- seqOptional =
+  -- foldRight (twiceOptional (:.)) (Full Nil)
 
 -- | Find the first element in the list matching the predicate.
 --
@@ -271,8 +276,12 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo: Course.List#find"
+find f x =
+  case filter f x of
+    Nil      -> Empty
+    h :. _ -> Full h
+
+
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -290,8 +299,9 @@ find =
 lengthGT4 ::
   List a
   -> Bool
-lengthGT4 =
-  error "todo: Course.List#lengthGT4"
+lengthGT4 x
+  | length x > 4 = True
+  | otherwise = False
 
 -- | Reverse a list.
 --
@@ -307,8 +317,7 @@ lengthGT4 =
 reverse ::
   List a
   -> List a
-reverse =
-  error "todo: Course.List#reverse"
+reverse = foldLeft (flip (:.)) Nil
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -318,12 +327,12 @@ reverse =
 --
 -- >>> let (x:.y:.z:.w:._) = produce (*2) 1 in [x,y,z,w]
 -- [1,2,4,8]
-produce ::
-  (a -> a)
-  -> a
-  -> List a
-produce =
-  error "todo: Course.List#produce"
+-- produce ::
+--   (a -> a)
+--   -> a
+--   -> List a
+-- produce f b xs = foldRight (:.) b xs
+
 
 -- | Do anything other than reverse a list.
 -- Is it even possible?
@@ -337,8 +346,8 @@ produce =
 notReverse ::
   List a
   -> List a
-notReverse =
-  error "todo: Is it even possible?"
+notReverse Nil = Nil
+notReverse x = x
 
 ---- End of list exercises
 
