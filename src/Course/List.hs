@@ -219,7 +219,7 @@ flatMap f (x :. xs) = f x ++ flatMap f xs
 flattenAgain ::
   List (List a)
      -> List a
-flattenAgain xs = flatMap (\x -> x) xs
+flattenAgain xs = flatMap id xs
 
 -- | Convert a list of optional values to an optional list of values.
 --
@@ -244,17 +244,14 @@ flattenAgain xs = flatMap (\x -> x) xs
 -- >>> seqOptional (Empty :. map Full infinity)
 -- Empty
 
--- seqOptional ::
---   List (Optional a)
---   -> Optional (List a)
--- seqOptional Nil = Full Nil
--- seqOptional (x :. xs) =
---     case x of
---       Empty -> Empty
---       Full a -> a :. seqOptional xs
-
-  -- seqOptional =
-  -- foldRight (twiceOptional (:.)) (Full Nil)
+seqOptional ::
+  List (Optional a)
+  -> Optional (List a)
+seqOptional Nil = Full Nil
+seqOptional (x :. xs)=
+  case x of
+    Empty -> Empty
+    Full p -> twiceOptional (:.) x (seqOptional xs )
 
 -- | Find the first element in the list matching the predicate.
 --
@@ -327,11 +324,11 @@ reverse = foldLeft (flip (:.)) Nil
 --
 -- >>> let (x:.y:.z:.w:._) = produce (*2) 1 in [x,y,z,w]
 -- [1,2,4,8]
--- produce ::
---   (a -> a)
---   -> a
---   -> List a
--- produce f b xs = foldRight (:.) b xs
+produce ::
+  (a -> a)
+  -> a
+  -> List a
+produce f b = b :. produce f (f b)
 
 
 -- | Do anything other than reverse a list.
@@ -346,8 +343,7 @@ reverse = foldLeft (flip (:.)) Nil
 notReverse ::
   List a
   -> List a
-notReverse Nil = Nil
-notReverse x = x
+notReverse = id
 
 ---- End of list exercises
 
