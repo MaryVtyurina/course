@@ -61,8 +61,7 @@ infixl 4 <*>
   (a -> b)
   -> f a
   -> f b
-(<$>) =
-  error "todo: Course.Applicative#(<$>)"
+(<$>) f g = pure f <*> g
 
 -- | Insert into Id.
 --
@@ -74,14 +73,12 @@ instance Applicative Id where
   pure ::
     a
     -> Id a
-  pure =
-    error "todo: Course.Applicative pure#instance Id"
-  (<*>) :: 
+  pure a = Id a
+  (<*>) ::
     Id (a -> b)
     -> Id a
     -> Id b
-  (<*>) =
-    error "todo: Course.Applicative (<*>)#instance Id"
+  (Id f) <*> (Id a) = Id (f a)
 
 -- | Insert into a List.
 --
@@ -93,14 +90,13 @@ instance Applicative List where
   pure ::
     a
     -> List a
-  pure =
-    error "todo: Course.Applicative pure#instance List"
+  pure a = a :. Nil
   (<*>) ::
     List (a -> b)
     -> List a
     -> List b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance List"
+  (<*>) Nil _ = Nil
+  (<*>) (f :. fs) x = (map f x) ++ (fs <*> x)
 
 -- | Insert into an Optional.
 --
@@ -118,15 +114,16 @@ instance Applicative Optional where
   pure ::
     a
     -> Optional a
-  pure =
-    error "todo: Course.Applicative pure#instance Optional"
+  pure x = Full x
   (<*>) ::
     Optional (a -> b)
     -> Optional a
     -> Optional b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance Optional"
-
+  (<*>) f Empty = Empty
+  (<*>) f (Full x) =
+    case f of
+      Full g -> Full (g x)
+      Empty -> Empty
 -- | Insert into a constant function.
 --
 -- >>> ((+) <*> (+10)) 3
