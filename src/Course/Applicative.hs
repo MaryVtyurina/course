@@ -146,7 +146,7 @@ instance Applicative ((->) t) where
   pure ::
     a
     -> ((->) t a)
-  pure x y = x
+  pure x _ = x
   (<*>) ::
     ((->) t (a -> b))
     -> ((->) t a)
@@ -267,7 +267,7 @@ lift4 f x y z p = f <$> x <*> y <*> z <*> p
   f a
   -> f b
   -> f b
-(*>) f g =
+(*>) f g = lift2 (\a b -> b) f g
 
 -- | Apply, discarding the value of the second argument.
 -- Pronounced, left apply.
@@ -292,8 +292,7 @@ lift4 f x y z p = f <$> x <*> y <*> z <*> p
   f b
   -> f a
   -> f b
-(<*) =
-  error "todo: Course.Applicative#(<*)"
+(<*) f g = lift2 const f g
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -315,8 +314,8 @@ sequence ::
   Applicative f =>
   List (f a)
   -> f (List a)
-sequence =
-  error "todo: Course.Applicative#sequence"
+sequence Nil = pure Nil
+sequence (x :. xs) = lift2 (:.) x (sequence xs)
 
 -- | Replicate an effect a given number of times.
 --
@@ -339,8 +338,9 @@ replicateA ::
   Int
   -> f a
   -> f (List a)
-replicateA =
-  error "todo: Course.Applicative#replicateA"
+replicateA 0 _ = pure Nil
+replicateA a f = lift2 (:.) f (replicateA (a-1) f)
+
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -367,8 +367,8 @@ filtering ::
   (a -> f Bool)
   -> List a
   -> f (List a)
-filtering =
-  error "todo: Course.Applicative#filtering"
+filtering _ Nil = pure Nil
+filtering p (x :. xs) = lift3 (if' a b c = if a then b else c) p x xs
 
 -----------------------
 -- SUPPORT LIBRARIES --
