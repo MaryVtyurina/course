@@ -362,13 +362,14 @@ replicateA a f = lift2 (:.) f (replicateA (a-1) f)
 -- >>> filtering (const $ True :. True :.  Nil) (1 :. 2 :. 3 :. Nil)
 -- [[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3]]
 --
+if' a b c = if a then b else c
 filtering ::
   Applicative f =>
   (a -> f Bool)
   -> List a
   -> f (List a)
 filtering _ Nil = pure Nil
-filtering p (x :. xs) = lift3 (if' a b c = if a then b else c) p x xs
+filtering p (x :. xs) = lift3 (if') (p x) (lift2 (:.) (pure x) (filtering p xs)) (filtering p xs)
 
 -----------------------
 -- SUPPORT LIBRARIES --
