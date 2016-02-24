@@ -6,7 +6,7 @@
 module Course.Monad(
   Monad(..)
 , join
-, (>>=)  
+, (>>=)
 , (<=<)
 ) where
 
@@ -63,13 +63,14 @@ infixr 1 =<<
 --
 -- >>> ((*) <*> (+2)) 3
 -- 15
+--(\x -> f <$> x) =<< x
 (<*>) ::
   Monad f =>
   f (a -> b)
   -> f a
   -> f b
 (<*>) =
-  error "todo: Course.Monad#(<*>)"
+   error "todo: Course.Monad#(<*>)"
 
 infixl 4 <*>
 
@@ -82,8 +83,7 @@ instance Monad Id where
     (a -> Id b)
     -> Id a
     -> Id b
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance Id"
+  (=<<) f (Id a) = f a
 
 -- | Binds a function on a List.
 --
@@ -94,8 +94,8 @@ instance Monad List where
     (a -> List b)
     -> List a
     -> List b
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance List"
+  (=<<) f Nil = Nil
+  (=<<) f (x :. xs) = (f x) ++ (=<<) f xs
 
 -- | Binds a function on an Optional.
 --
@@ -106,8 +106,11 @@ instance Monad Optional where
     (a -> Optional b)
     -> Optional a
     -> Optional b
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance Optional"
+  (=<<) f Empty = Empty
+  (=<<) f (Full x) =
+    case f x of
+      Full m -> Full m
+      Empty -> Empty
 
 -- | Binds a function on the reader ((->) t).
 --
@@ -118,8 +121,7 @@ instance Monad ((->) t) where
     (a -> ((->) t b))
     -> ((->) t a)
     -> ((->) t b)
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance ((->) t)"
+  (=<<) f g = (\x -> (f . g) x x)
 
 -- | Flattens a combined structure to a single structure.
 --
@@ -138,8 +140,7 @@ join ::
   Monad f =>
   f (f a)
   -> f a
-join =
-  error "todo: Course.Monad#join"
+join xs = id =<< xs
 
 -- | Implement a flipped version of @(=<<)@, however, use only
 -- @join@ and @(<$>)@.
@@ -152,8 +153,7 @@ join =
   f a
   -> (a -> f b)
   -> f b
-(>>=) =
-  error "todo: Course.Monad#(>>=)"
+(>>=) xs f = (join $ f <$> xs)
 
 infixl 1 >>=
 
@@ -168,8 +168,7 @@ infixl 1 >>=
   -> (a -> f b)
   -> a
   -> f c
-(<=<) =
-  error "todo: Course.Monad#(<=<)"
+(<=<) f g x = (g x) >>= f
 
 infixr 1 <=<
 
