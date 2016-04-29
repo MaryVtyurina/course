@@ -112,7 +112,11 @@ mapParser ::
   (a -> b)
   -> Parser a
   -> Parser b
-mapParser f g = f <$> g
+mapParser f (P pa) =
+  P (\i -> case pa i of
+    Result res c -> Result res (f c)
+    ErrorResult e -> ErrorResult e
+  )
 
 
 -- | This is @mapParser@ with the arguments flipped.
@@ -149,7 +153,11 @@ bindParser ::
   (a -> Parser b)
   -> Parser a
   -> Parser b
-bindParser f a = f =<< a
+bindParser f (P pa) =
+  P ( \i -> case pa i of
+    Result res c -> parse (f c) res
+    ErrorResult e -> ErrorResult e
+    )
 
 -- | This is @bindParser@ with the arguments flipped.
 -- It might be more helpful to use this function if you prefer this argument order.
@@ -319,9 +327,10 @@ digit = satisfy (\i -> isDigit i )
 -- True
 natural ::
   Parser Int
-natural =
-   error "todo: Course.Parser#natural"
---natural = flbindParser (list digit) (valueParser . read)
+natural = list1 digit `flbindParser` (\ls -> case read ls of
+    Empty  -> failed
+    Full n -> valueParser n
+  )
 
 --
 -- | Return a parser that produces a space character but fails if
@@ -604,7 +613,7 @@ instance Functor Parser where
     (a -> b)
     -> Parser a
     -> Parser b
-  (<$>) = error "todo: Course.Parser pure#instance Parser"
+  (<$>) = mapParser
 
 -- | Write an Applicative functor instance for a @Parser@.
 -- /Tip:/ Use @bindParser@ and @valueParser@.
@@ -612,14 +621,12 @@ instance Applicative Parser where
   pure ::
     a
     -> Parser a
-  pure =
-    error "todo: Course.Parser pure#instance Parser"
+  pure = valueParser
   (<*>) ::
     Parser (a -> b)
     -> Parser a
     -> Parser b
-  (<*>) =
-    error "todo: Course.Parser (<*>)#instance Parser"
+  (<*>) f pa = f `flbindParser` \f -> pa `flbindParser` \a -> valueParser (f a)
 
 -- | Write a Monad instance for a @Parser@.
 instance Monad Parser where
@@ -627,5 +634,4 @@ instance Monad Parser where
     (a -> Parser b)
     -> Parser a
     -> Parser b
-  (=<<) =
-    error "todo: Course.Parser (=<<)#instance Parser"
+  (=<<) = bindParser
